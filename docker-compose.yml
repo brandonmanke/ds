@@ -16,3 +16,7 @@ services:
         - HOST=redis-service
     #ports:
     #  - 3000:80
+  go-subscriber:
+    build: ./subscriber
+    environment:
+        - HOST=redis-service
