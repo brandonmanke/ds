@@ -28,10 +28,6 @@ func redisConnect(options *redis.Options) {
 	fmt.Printf("pong: %s\n", pong)
 }
 
-// current problem
-// main goroutine / thread is finishing before our setTimeout
-// thus killing all existing threads, we need to utilize channels
-// to make the main function wait/block for our goroutine to finish
 func main() {
 	var sb strings.Builder
 	hostname, err := lookupHostnameEnv()
