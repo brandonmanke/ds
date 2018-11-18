@@ -1,0 +1,18 @@
+version: '3' # version of docker compose schema we are using
+
+# list of our docker "services"/containers
+services:
+  redis-service:
+    image: 'redis:5'
+    sysctls:
+      - net.core.somaxconn=511
+    ports:
+      - 6739:6739
+    volumes:
+      - ./redis-data:/data
+  go-publisher:
+    build: ./publisher
+    environment:
+        - HOST=redis-service
+    #ports:
+    #  - 3000:80
