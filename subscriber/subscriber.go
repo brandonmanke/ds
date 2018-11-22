@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Subscriber wrapper around go-redis redis client
 type Subscriber struct {
 	redis *redis.Client
 	pubsub *redis.PubSub
@@ -25,6 +26,7 @@ func lookupHostnameEnv() (string, error) {
 	return hostname, nil
 }
 
+// Creates a Subscriber object and returns *Subscriber to it
 func CreateSubscriber(chanName string) (*Subscriber, error) {
 	var sb strings.Builder
 	hostname, err := lookupHostnameEnv()

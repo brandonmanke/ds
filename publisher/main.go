@@ -1,3 +1,24 @@
+/* Super basic architecture overview
+ *       ----------------
+ *       |  Publisher   |
+ *       ----------------
+ *              | (publish)
+ *              v
+ *          ---------
+ *          | Redis |
+ *          --------- 
+ *            |   ^
+ * (Receive)  v   | (Post messages & Subscribe)
+ *       ----------------
+ *       |  Subscriber  |
+ *       ----------------
+ *               ^           
+ *               | (WebSockets)
+ *               v
+ *        --------------
+ *        |   Client   | 
+ *        --------------
+ */ 
 package main
 
 import ( 
@@ -23,19 +44,22 @@ func main() {
 
 	// TODO remove wait groups and use channels instead 
 	// to know when threads finish publishing
+	// We need to refactor this anyways since we are going
+	// to be polling a bunch of different APIs
 	//ch := make
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 
 	go func() {
 		testMessages(pub)
+		wg.Done()
 	}()
 
 	go func() {
 		testMessages(pub)
+		wg.Done()
 	}()
 	
-	//wg.Done()
 	wg.Wait()
 }

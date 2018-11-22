@@ -20,3 +20,5 @@ services:
     build: ./subscriber
     environment:
         - HOST=redis-service
+    ports:
+      - 8080:80

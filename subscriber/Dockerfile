@@ -5,5 +5,5 @@ RUN apk --no-cache add ca-certificates
 ADD main /
 # exposes port 80 to other docker containers, 
 # nothing outside docker can access
-#EXPOSE 80
+EXPOSE 80
 CMD ["/main"]
