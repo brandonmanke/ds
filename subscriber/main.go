@@ -44,6 +44,6 @@ func main() {
 	})
 
 	http.Handle("/ws", server)
-	log.Println("Serving at localhost:80...")
-	http.ListenAndServe(":80", nil)
+	log.Println("Serving at localhost:8080...")
+	http.ListenAndServe(":8080", nil)
 }
