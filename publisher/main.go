@@ -6,22 +6,22 @@
  *              v
  *          ---------
  *          | Redis |
- *          --------- 
+ *          ---------
  *            |   ^
  * (Receive)  v   | (Post messages & Subscribe)
  *       ----------------
  *       |  Subscriber  |
  *       ----------------
- *               ^           
+ *               ^
  *               | (WebSockets)
  *               v
  *        --------------
- *        |   Client   | 
+ *        |   Client   |
  *        --------------
- */ 
+ */
 package main
 
-import ( 
+import (
 	"fmt"
 	"sync"
 )
@@ -42,7 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	// TODO remove wait groups and use channels instead 
+	// TODO remove wait groups and use channels instead
 	// to know when threads finish publishing
 	// We need to refactor this anyways since we are going
 	// to be polling a bunch of different APIs
@@ -60,6 +60,6 @@ func main() {
 		testMessages(pub)
 		wg.Done()
 	}()
-	
+
 	wg.Wait()
 }

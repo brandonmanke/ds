@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"github.com/gorilla/websocket"
 )
 
 const port = ":8080"
+
 var addr = flag.String("addr", port, "http service address")
 var upgrader = websocket.Upgrader{}
 
@@ -29,8 +30,8 @@ func testSub() {
 
 func handleSocketConn(wr http.ResponseWriter, req *http.Request) {
 	// Never do this in production
-	upgrader.CheckOrigin = func(r *http.Request) bool { 
-		return true 
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
 	}
 	socket, err := upgrader.Upgrade(wr, req, nil)
 	if err != nil {

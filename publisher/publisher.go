@@ -11,8 +11,8 @@ import (
 
 // Publisher wrapper around go-redis redis client
 type Publisher struct {
-	redis  *redis.Client
-	pubsub *redis.PubSub
+	redis    *redis.Client
+	pubsub   *redis.PubSub
 	chanName string
 }
 
@@ -46,19 +46,18 @@ func CreatePublisher(ch string) (*Publisher, error) {
 	time.Sleep(time.Second) // sleep one second to wait for redis service to start
 	pubsub := redis.Subscribe(ch)
 	p := Publisher{
-		redis: redis,
-		pubsub: pubsub,
+		redis:    redis,
+		pubsub:   pubsub,
 		chanName: ch,
 	}
 	return &p, nil
 }
 
-
 //func _createPublisher(r *redis.Client, ch string) *Publisher {
-	
-	//channel := pubsub.Channel() //pubsub.ch
 
-	//return &p
+//channel := pubsub.Channel() //pubsub.ch
+
+//return &p
 //}
 
 func (p *Publisher) PublishMessages(msgs ...string) error {
@@ -74,5 +73,5 @@ func (p *Publisher) PublishMessages(msgs ...string) error {
 
 // Close pubsub channel
 func (p *Publisher) Close() {
-	p.pubsub.Close() 
+	p.pubsub.Close()
 }

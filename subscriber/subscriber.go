@@ -11,8 +11,8 @@ import (
 
 // Subscriber wrapper around go-redis redis client
 type Subscriber struct {
-	redis *redis.Client
-	pubsub *redis.PubSub
+	redis    *redis.Client
+	pubsub   *redis.PubSub
 	chanName string
 	ch       <-chan *redis.Message
 }
@@ -48,10 +48,10 @@ func CreateSubscriber(chanName string) (*Subscriber, error) {
 	pubsub := redis.Subscribe(chanName)
 	ch := pubsub.Channel()
 	sub := Subscriber{
-		redis: redis,
-		pubsub: pubsub,
+		redis:    redis,
+		pubsub:   pubsub,
 		chanName: chanName,
-		ch: ch,
+		ch:       ch,
 	}
 	return &sub, nil
 }
