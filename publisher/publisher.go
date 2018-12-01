@@ -60,6 +60,15 @@ func CreatePublisher(ch string) (*Publisher, error) {
 //return &p
 //}
 
+func (p *Publisher) PublishMessage(msg interface{}) error {
+	err := p.redis.Publish(p.chanName, msg).Err()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
 func (p *Publisher) PublishMessages(msgs ...string) error {
 	for _, m := range msgs {
 		err := p.redis.Publish(p.chanName, m).Err()

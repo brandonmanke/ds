@@ -44,6 +44,7 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
+	defer pub.Close()
 
 	file, err := os.Open("./config.json")
 	if err != nil {
@@ -68,8 +69,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("HTTP RESPONSE:")
-	fmt.Println(res)
+
+	serializedResponse, err := SerializeJson(res)
+	if err != nil {
+		panic(err)
+	}
 
 	// TODO remove wait groups and use channels instead
 	// to know when threads finish publishing
@@ -79,6 +83,8 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(2)
+
+	pub.PublishMessage(serializedResponse) // publish our weather data
 
 	go func() {
 		testMessages(pub)
