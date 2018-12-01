@@ -11,6 +11,9 @@ yarn-error.log*
 #exe
 main
 
+#config (api keys etc)
+publisher/config/config.json
+
 # Runtime data
 pids
 *.pid

@@ -22,7 +22,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"sync"
 )
 
@@ -41,6 +44,32 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
+
+	file, err := os.Open("./config.json")
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+	defer file.Close()
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err)
+	}
+
+	var config map[string]string
+	json.Unmarshal(bytes, &config)
+	fmt.Println(config)
+	fmt.Println("config key")
+	fmt.Println(config["weather-api-key"])
+
+	weatherAPI := CreateWeatherAPI(config["weather-api-key"])
+	res, err := weatherAPI.GetForecast()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("HTTP RESPONSE:")
+	fmt.Println(res)
 
 	// TODO remove wait groups and use channels instead
 	// to know when threads finish publishing
