@@ -1,19 +1,6 @@
 import React from 'react';
+import FeedItem from './FeedItem';
 
-const weather = [
-    {
-      title: "Weather1",
-      time: "9:00 PM"
-    },
-    {
-        title: "Weather2",
-        time: "10:00 PM"
-    },
-    {
-        title: "Weather3",
-        time: "11:00 PM"
-    },
-  ]
 
 class Feed extends React.Component {
 
@@ -25,15 +12,24 @@ class Feed extends React.Component {
 
     render() {
 
-        const list = weather;
+        const {
+            feed
+        } = this.props
+
+        feed.sort((a,b) => {
+            return a.time - b.time;
+        })
 
         return(
-            <p>
-            {list.map((weather, index) => (
-                <div>{weather.title}
-                {weather.time}</div>
+            <tbody>
+            {feed.map((item, index) => (
+                <FeedItem
+                    title = {item.title}
+                    time = {item.time}
+                    key = {index}
+                ></FeedItem>
             ))}
-            </p>
+            </tbody>
         );
     }
 }
