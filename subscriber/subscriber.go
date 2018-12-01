@@ -26,6 +26,26 @@ func lookupHostnameEnv() (string, error) {
 	return hostname, nil
 }
 
+func GetRedis() (*redis.Client, error) {
+	var sb strings.Builder
+	hostname, err := lookupHostnameEnv()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	sb.WriteString(hostname)
+	sb.WriteString(":6379")
+	hostname = sb.String()
+	var options = redis.Options{
+		Addr:     hostname,
+		Password: "",
+		DB:       0,
+		// OnConnect: func(*Conn) error
+	}
+	redis := redis.NewClient(&options)
+	return redis, nil
+}
+
 // Creates a Subscriber object and returns *Subscriber to it
 func CreateSubscriber(chanName string) (*Subscriber, error) {
 	var sb strings.Builder
