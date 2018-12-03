@@ -7,10 +7,11 @@ import (
 	"strings"
 )
 
-// Maybe change to just api.darksky.net
-// REST Forcast Endpoint: /forcast/[key]/[latitude],[longitude]
+// Endpoint for Dark Sky REST API
+// example endpoint: /forcast/[key]/[latitude],[longitude]
 const Endpoint = "https://api.darksky.net/"
 
+// WeatherAPI wrapper struct for darksky api
 type WeatherAPI struct {
 	endpoint string
 	key      string
@@ -18,7 +19,7 @@ type WeatherAPI struct {
 	long     float32
 }
 
-// initialize a simple WeatherAPI struct based  on key param
+// CreateWeatherAPI initialize a simple WeatherAPI struct based  on key param
 func CreateWeatherAPI(key string) *WeatherAPI {
 	return &WeatherAPI{
 		endpoint: Endpoint,
@@ -28,7 +29,7 @@ func CreateWeatherAPI(key string) *WeatherAPI {
 	}
 }
 
-// Send HTTP Request to Forcast Endpoint Based on Coordinates
+// GetForecast Send HTTP Request to Forcast Endpoint Based on Coordinates
 func (w *WeatherAPI) GetForecast() (*http.Response, error) {
 	var sb strings.Builder
 	sb.WriteString(w.endpoint)
@@ -46,9 +47,9 @@ func (w *WeatherAPI) GetForecast() (*http.Response, error) {
 	return res, err
 }
 
-// We first decode our http response body into a map[string]interface{}
+// SerializeJSON We first decode our http response body into a map[string]interface{}
 // then we marshal/serialize this map into a []byte for transfer through redis
-func SerializeJson(res *http.Response) ([]byte, error) {
+func SerializeJSON(res *http.Response) ([]byte, error) {
 	var obj interface{}
 	defer res.Body.Close()
 	err := json.NewDecoder(res.Body).Decode(&obj)

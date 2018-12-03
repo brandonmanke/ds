@@ -8,6 +8,9 @@ yarn-error.log*
 # Redis Logs
 *.rdb
 
+# todo.md
+TODO.md
+
 #exe
 main
 

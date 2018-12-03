@@ -1,4 +1,4 @@
-/* Super basic architecture overview
+/*Super basic architecture overview
  *       ----------------
  *       |  Publisher   |
  *       ----------------
@@ -38,31 +38,35 @@ func testMessages(pub *Publisher) {
 	//time.Sleep(500 * time.Millisecond)
 }
 
-func main() {
-	pub, err := CreatePublisher("test.channel")
+// Reads config.json file at file path and returns it as a map
+func readConfig(filePath string) (map[string]string, error) {
+	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
-	}
-	defer pub.Close()
-
-	file, err := os.Open("./config.json")
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return nil, err
 	}
 	defer file.Close()
 
 	bytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var config map[string]string
 	json.Unmarshal(bytes, &config)
-	fmt.Println(config)
-	fmt.Println("config key")
-	fmt.Println(config["weather-api-key"])
+	return config, nil
+}
+
+func main() {
+	pub, err := CreatePublisher("test.channel")
+	if err != nil {
+		panic(err)
+	}
+	defer pub.Close()
+
+	config, err := readConfig("./config.json")
+	if err != nil {
+		panic(err)
+	}
 
 	weatherAPI := CreateWeatherAPI(config["weather-api-key"])
 	res, err := weatherAPI.GetForecast()
@@ -70,7 +74,18 @@ func main() {
 		panic(err)
 	}
 
-	serializedResponse, err := SerializeJson(res)
+	serializedWeatherRes, err := SerializeJSON(res)
+	if err != nil {
+		panic(err)
+	}
+
+	newsAPI := CreateNYTimesAPI(config["news-api-key"])
+	res, err = newsAPI.GetHome()
+	if err != nil {
+		panic(err)
+	}
+
+	serializedNewsRes, err := SerializeJSON(res)
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +99,9 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	pub.PublishMessage(serializedResponse) // publish our weather data
+	// publish our weather and news data
+	pub.PublishMessage(serializedWeatherRes)
+	pub.PublishMessage(serializedNewsRes)
 
 	go func() {
 		testMessages(pub)
