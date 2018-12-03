@@ -21,11 +21,12 @@ type Subscriber struct {
 func lookupHostnameEnv() (string, error) {
 	hostname, ok := os.LookupEnv("HOST")
 	if ok != true {
-		return "", errors.New("HOST environment variable not set.")
+		return "", errors.New("HOST environment variable not set")
 	}
 	return hostname, nil
 }
 
+// GetRedis return redis client instance
 func GetRedis() (*redis.Client, error) {
 	var sb strings.Builder
 	hostname, err := lookupHostnameEnv()
@@ -46,7 +47,7 @@ func GetRedis() (*redis.Client, error) {
 	return redis, nil
 }
 
-// Creates a Subscriber object and returns *Subscriber to it
+// CreateSubscriber creates subscriber object and returns *Subscriber to it
 func CreateSubscriber(chanName string) (*Subscriber, error) {
 	var sb strings.Builder
 	hostname, err := lookupHostnameEnv()
@@ -76,6 +77,7 @@ func CreateSubscriber(chanName string) (*Subscriber, error) {
 	return &sub, nil
 }
 
+// GetChannel returns channel type that current subscriber is using
 func (s *Subscriber) GetChannel() <-chan *redis.Message {
 	return s.ch
 }

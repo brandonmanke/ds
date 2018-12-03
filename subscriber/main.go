@@ -122,7 +122,7 @@ func parseMessage(socket *websocket.Conn) (int, error) {
 }
 
 func handleSocketConn(wr http.ResponseWriter, req *http.Request) {
-	// Never do this in production
+	// Never do this in production (allows CORS for dev)
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}

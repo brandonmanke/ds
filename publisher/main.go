@@ -1,4 +1,4 @@
-/* Super basic architecture overview
+/*Super basic architecture overview
  *       ----------------
  *       |  Publisher   |
  *       ----------------
@@ -74,7 +74,7 @@ func main() {
 		panic(err)
 	}
 
-	serializedResponse, err := SerializeJson(res)
+	serializedResponse, err := SerializeJSON(res)
 	if err != nil {
 		panic(err)
 	}
