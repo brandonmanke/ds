@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Row, Button } from 'react-bootstrap';
 
+
 class Subscriptions extends React.Component {
 
     
@@ -9,52 +10,40 @@ class Subscriptions extends React.Component {
 
         const {
             subscriptions,
-            changeSubscriptions
+            changeSubscriptions,
+            changeUnsubscriptions
         } = this.props;
 
         return(
-            <div className = "subscriptions">
+        <div className = "subscriptions">
           <Row className="with-margin">
             <Button 
-                block
-                active = {subscriptions.default}
-                onClick={() => changeSubscriptions("default")}>
-                Default
+                block bsStyle="danger"
+                active = {subscriptions[0].subscribed}
+                onClick={subscriptions[0].subscribed ? 
+                    () => changeUnsubscriptions(0) : () => changeSubscriptions(0) }>
+                Test
             </Button>
           </Row>
           <Row className="with-margin">
             <Button 
                 block bsStyle="primary"
-                active = {subscriptions.weather}
-                onClick={() => changeSubscriptions("weather")}>
+                active = {subscriptions[1].subscribed}
+                onClick={subscriptions[1].subscribed ? 
+                    () => changeUnsubscriptions(1) : () => changeSubscriptions(1) }>
                 Weather
             </Button>
           </Row>
           <Row className="with-margin">
             {/* Indicates a successful or positive action */}
             <Button block bsStyle="success"
-                active = {subscriptions.news}
-                onClick={() => changeSubscriptions("news")}>
+                active = {subscriptions[2].subscribed}
+                onClick={subscriptions[2].subscribed ? 
+                    () => changeUnsubscriptions(2) : () => changeSubscriptions(2) }>
                 News
             </Button>
           </Row>
-          <Row className="with-margin">
-            {/* Contextual button for informational alert messages */}
-            <Button block bsStyle="info"
-                active = {subscriptions.friends}
-                onClick={() => changeSubscriptions("friends")}>
-                Friends
-            </Button>
-          </Row>
-          <Row className="with-margin">
-            {/* Indicates caution should be taken with this action */}
-            <Button block bsStyle="warning">Warning</Button>
-          </Row>
-          <Row className="with-margin">
-            {/* Indicates a dangerous or potentially negative action */}
-            <Button block bsStyle="danger">Danger</Button>
-          </Row>
-          </div>
+        </div>
         )
     }
 }

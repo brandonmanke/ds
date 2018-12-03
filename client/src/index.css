@@ -1,11 +1,59 @@
 body {
   background: #e8e7e7; 
   font-family: arial;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
 }
 
 .with-margin {
   margin-bottom: 5px;
+}
+
+/* Test */
+.btn-danger {
+  background-color: white;
+  color: black
+}
+
+.btn-danger:hover {
+  background-color: #c75451;
+
+}
+.btn-danger:focus {
+  background-color: white;
+  color: black
+
+}
+
+/* Weather */
+.btn-primary {
+  background-color: white;
+  color: black
+}
+
+.btn-primary:hover {
+  background-color: #5488b5;
+
+}
+.btn-primary:focus {
+  background-color: white;
+  color: black
+
+}
+
+/* News */
+.btn-success {
+  background-color: white;
+  color: black
+}
+
+.btn-success:hover {
+  background-color: #709e70;
+
+}
+.btn-success:focus {
+  background-color: white;
+  color: black
+
 }
 
 /* code {

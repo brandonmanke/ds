@@ -1,201 +1,207 @@
-import React, { Component } from 'react';
-import './App.css';
-import './index.css'
+import React, { Component } from "react";
+import "./App.css";
+import "./index.css";
 
-import { Table, Grid, Row, Col, PageHeader } from 'react-bootstrap';
-import Feed from './components/Feed'
-import Subscriptions from './components/Subscriptions'
+import { Table, Grid, Row, Col, PageHeader } from "react-bootstrap";
+import Feed from "./components/Feed";
+import Subscriptions from "./components/Subscriptions";
 
-var date = new Date()
+//Establishing socket instance
+const socket = new WebSocket("ws://localhost:8080/ws");
+
+socket.onclose = evt => {
+  console.log("CLOSE");
+};
+
+socket.onerror = evt => {
+  console.log("ERROR: " + evt.data);
+};
+
+//Variables for dummy feed data
+var date = new Date();
 var time = date.getTime();
 
-var hour = 60*60*1000
+var hour = 60 * 60 * 1000;
 
-  const times = [time, time+(3*hour), time+(6*hour),
-                 time+(1*hour), time+(4*hour), time+(7*hour),
-                 time+(2*hour), time+(5*hour)]
+const times = [
+  time,
+  time + 3 * hour,
+  time + 6 * hour,
+  time + 1 * hour,
+  time + 4 * hour,
+  time + 7 * hour,
+  time + 2 * hour,
+  time + 5 * hour
+];
 
 class App extends Component {
-
   state = {
+    // Dummy feed data. Will switch to null once ready to handle socket messages
     feed: [
       {
-        type: 'weather',
+        type: "weather",
         title: "Weather1",
         time: times[0]
       },
       {
-        type: 'weather',
+        type: "weather",
         title: "Weather2",
         time: times[1]
       },
       {
-        type: 'weather',
+        type: "weather",
         title: "Weather3",
         time: times[2]
       },
       {
-        type: 'news',
+        type: "news",
         title: "News1",
         time: times[3]
       },
       {
-        type: 'news',
+        type: "news",
         title: "News2",
         time: times[4]
       },
       {
-        type: 'news',
+        type: "news",
         title: "News3",
         time: times[5]
       },
       {
-        type: 'friends',
+        type: "friends",
         title: "Friend1",
         time: times[6]
       },
       {
-        type: 'friends',
+        type: "friends",
         title: "Friend2",
         time: times[7]
-      },
+      }
     ],
-    subscriptions: {
-      default: true,
-      weather: false,
-      news: false,
-      friends: false
-    }
-  }
+    // Array of state objects that change based on subscriptions
+    subscriptions: [
+      {
+        title: "test.channel",
+        subscribed: true
+      },
+      {
+        title: "weather",
+        subscribed: false
+      },
+      {
+        title: "news",
+        subscribed: false
+      }
+    ]
+  };
 
-  defaultSubs = {
-    default: true,
-    weather: false,
-    news: false,
-    friends: false
-  }
+  // Might need to use this. Placeholder for now
+  componentDidMount() {}
 
-  handleSubscription = (buttons) => {
+  //Handles button controls to subscribe to channel
+  handleSubscription = button => {
+    console.log("frontend subscribed")
+    socket.send("subscribe test.channel");
+    this.setState(prevState => {
+      return {
+        prevState: (prevState.subscriptions[button].subscribed = true)
+      };
+    });
+  };
 
-    console.log(buttons)
-    console.log(this.state)
-
-    if(buttons === "default") {
-      this.setState(prevState => {
-        return {
-          default: prevState.subscriptions.default = true,
-          weather: prevState.subscriptions.weather = false,
-          news: prevState.subscriptions.news = false,
-          friends: prevState.subscriptions.friends = false,
-        }
-      })
-    }
-    else {
-      this.setState(prevState => {
-        return {
-          default: prevState.subscriptions.default = false,
-          buttons: prevState.subscriptions[buttons] = true
-        }
-      })
-    }
-  }
-
+  //Handles button for unsubscribe
+  handleUnsubscription = button => {
+    console.log("frontend unsubscribed")
+    socket.send("unsubscribe test.channel");
+    this.setState(prevState => {
+      return {
+        subscribed: (prevState.subscriptions[button].subscribed = false)
+      };
+    });
+  };
 
   render() {
+    //Checks for open connection
+    if (socket.readyState === 1) {
+      //Connection is open
+      socket.onmessage = evt => {
+        console.log("RESPONSE: " + evt.data);
+        switch(evt) {
+          //If evt.data returns error
+          case (evt.data.search("error") !== -1 ):
+          console.log("evt.data returns error");
+          break;
+          //If evt.data returns data
+          default:
+          /*
+            Uncomment below to set feed state. May possible need to format data to feed object. 
+            Look above to object state.feed for current reference
+          */
 
-    console.log(this.state.subscriptions)
+          // this.setState(prevState => {
+          //   return {
+          //     //TODO: How to handle evt.data?
+          //     // subscribed: (prevState.feed = evt.data)
+          //   };
+          // });
+          break;
+        }
+        
+      };
+    } 
+    else {
+      //Connection needs to be opened
+      socket.onopen = evt => {
+        console.log("OPEN");
+        // socket.send("subscribe test.channel");
+        socket.onmessage = evt => {
+          console.log("RESPONSE: " + evt.data);
+        };
+      };
+    }
+
+    console.log("Rendered!");
 
     return (
-
       <Grid>
-      <PageHeader>
+        <PageHeader>
+          <Row>
+            <Col md={3}>PUB -- SUB</Col>
+            <Col md={3}>
+              <small>Server by Brandon Manke</small>
+            </Col>
+            <Col md={3}>
+              <small>UI and Sockets by Rob Putyra</small>
+            </Col>
+          </Row>
+        </PageHeader>
         <Row>
-          <Col md={3}>PUB -- SUB</Col>
-          <Col md={3}>
-            <small>Server by Brandon Manke</small>
-            {/* <small> Room Code: {this.state.roomCode}</small> */}
-            {/* <small> Room Code: {roomCode}</small> */}
+          <Col md={8}>
+            <Table striped bordered condensed hover responsive>
+              <thead>
+                <tr>
+                  <th className="text-center" colSpan="2">
+                    Feed
+                  </th>
+                </tr>
+              </thead>
+              <Feed
+                feed={this.state.feed}
+                subscriptions={this.state.subscriptions}
+                // Test with {feed just to see}
+              />
+            </Table>
           </Col>
-          <Col md={3}>
-            {/* <small>{this.props.room.roomName}</small> */}
-          </Col>
-          <Col md={3}>
-          <small>UI and Sockets by Rob Putyra</small>
-            {/* <Button onClick={this.debugAdd}>Add song</Button> */}
+          <Col className="text-center" md={4}>
+            <Subscriptions
+              subscriptions={this.state.subscriptions}
+              changeSubscriptions={this.handleSubscription}
+              changeUnsubscriptions={this.handleUnsubscription}
+            />
           </Col>
         </Row>
-      </PageHeader>
-      <Row>
-        {/* <SongSearch /> */}
-      </Row>
-      <Row>
-        <Col md={8}>
-        <Table striped bordered condensed hover responsive>
-          <thead>
-            <tr>
-            <th className="text-center" colSpan="2">
-              Feed
-            </th>
-              {/* <th>Song</th>
-              <th>Artist</th>
-              <th>Album</th>
-              <th>Length</th>
-              <th>Votes</th> */}
-            </tr>
-          </thead>
-          {/* <tbody> */}
-            <Feed
-              feed = {this.state.feed}
-              subscriptions = {this.state.subscriptions}
-              // Test with {feed just to see} 
-            ></Feed>
-          {/* </tbody> */}
-          {/* <SongList songs={songs} vote={this.vote} /> */}
-          {/* <tbody>
-            {songs.map((song, index) => (
-              // console.log(`Song: ${song}`)
-              <Song
-                title={song.data.name}
-                artist={song.data.artist.name}
-                album={song.data.album.name}
-                songLength={'0'}
-                votes={song.data.votes}
-                id={song.data.id}
-                key={song.key}
-                songKey={song.key}
-                index={index}
-                vote={this.vote}
-              />
-            ))}
-          </tbody> */}
-        </Table>
-        </Col>
-        {/* TODO: These buttons should be in their own component class */}
-        <Col className="text-center" md={4}>
-          <Subscriptions
-            subscriptions = {this.state.subscriptions}
-            changeSubscriptions = {this.handleSubscription}
-          />
-        </Col>
-      </Row>
-    </Grid>
-
-      // <div className="App">
-      //   <header className="App-header">
-      //     <img src={logo} className="App-logo" alt="logo" />
-      //     <p>
-      //       Edit <code>src/App.js</code> and save to reload.
-      //     </p>
-      //     <a
-      //       className="App-link"
-      //       href="https://reactjs.org"
-      //       target="_blank"
-      //       rel="noopener noreferrer"
-      //     >
-      //       Learn React
-      //     </a>
-      //   </header>
-      // </div>
+      </Grid>
     );
   }
 }
