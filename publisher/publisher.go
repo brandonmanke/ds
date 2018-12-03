@@ -20,12 +20,12 @@ type Publisher struct {
 func lookupHostnameEnv() (string, error) {
 	hostname, ok := os.LookupEnv("HOST")
 	if ok != true {
-		return "", errors.New("HOST environment variable not set.")
+		return "", errors.New("HOST environment variable not set")
 	}
 	return hostname, nil
 }
 
-// Creates and returns a *Publisher
+// CreatePublisher Creates and returns a *Publisher
 func CreatePublisher(ch string) (*Publisher, error) {
 	var sb strings.Builder
 	hostname, err := lookupHostnameEnv()
@@ -60,6 +60,7 @@ func CreatePublisher(ch string) (*Publisher, error) {
 //return &p
 //}
 
+// PublishMessage takes interface{} and publishes it to channel
 func (p *Publisher) PublishMessage(msg interface{}) error {
 	err := p.redis.Publish(p.chanName, msg).Err()
 	if err != nil {
@@ -69,6 +70,7 @@ func (p *Publisher) PublishMessage(msg interface{}) error {
 	return nil
 }
 
+// PublishMessages publishes multiple strings to channel
 func (p *Publisher) PublishMessages(msgs ...string) error {
 	for _, m := range msgs {
 		err := p.redis.Publish(p.chanName, m).Err()
