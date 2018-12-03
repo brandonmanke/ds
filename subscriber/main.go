@@ -4,10 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/websocket"
 )
 
 const port = ":8080"
@@ -46,11 +47,12 @@ func subscribe(channelName string, mt int, socket *websocket.Conn) {
 		sb.WriteString(": ")
 		sb.WriteString(msg.Payload)
 		socket.WriteMessage(mt, []byte(sb.String()))
-		fmt.Println(msg.Channel, msg.Payload)
+		fmt.Println("Emiting message:", msg.Channel, msg.Payload)
 	}
 }
 
 func unsubscribe(channelName string, socket *websocket.Conn) error {
+	fmt.Printf("Unsubscribing to %s.\n", channelName)
 	redis, err := GetRedis()
 	if err != nil {
 		log.Println(err)
@@ -81,6 +83,10 @@ func listenForMessages(socket *websocket.Conn) {
 		//PongMessage = 10
 
 		mt, err := parseMessage(socket)
+		if mt == 8 {
+			log.Println("Close message received. Closing Socket.")
+			break
+		}
 		if err != nil {
 			log.Println("Parse message error:", err)
 			socket.WriteMessage(mt, []byte(err.Error()))
