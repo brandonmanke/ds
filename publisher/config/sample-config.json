@@ -1,3 +1,4 @@
 {
-    "weather-api-key": "dark-sky-api-key-here"
+    "weather-api-key": "dark-sky-api-key-here",
+    "news-api-key": "nytimes-api-key-here"
 }

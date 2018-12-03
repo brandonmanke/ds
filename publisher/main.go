@@ -74,7 +74,18 @@ func main() {
 		panic(err)
 	}
 
-	serializedResponse, err := SerializeJSON(res)
+	serializedWeatherRes, err := SerializeJSON(res)
+	if err != nil {
+		panic(err)
+	}
+
+	newsAPI := CreateNYTimesAPI(config["news-api-key"])
+	res, err = newsAPI.GetHome()
+	if err != nil {
+		panic(err)
+	}
+
+	serializedNewsRes, err := SerializeJSON(res)
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +99,9 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	pub.PublishMessage(serializedResponse) // publish our weather data
+	// publish our weather and news data
+	pub.PublishMessage(serializedWeatherRes)
+	pub.PublishMessage(serializedNewsRes)
 
 	go func() {
 		testMessages(pub)
