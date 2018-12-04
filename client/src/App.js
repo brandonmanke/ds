@@ -28,6 +28,8 @@ class App extends Component {
       // feed: newsFeed,
   
       feed: '',
+
+      intervalEnabled: false,
   
       // Array of state objects that change based on subscriptions
       subscriptions: [
@@ -84,13 +86,17 @@ class App extends Component {
 
   render() {
     //Checks for open connection
-    if (socket.readyState === 1) {
-      setInterval(() => socket.send("unsubscribe poll"), 500)
-
+    if (socket.readyState === 1 && this.state.intervalEnabled === false) {
+      setInterval(() => socket.send("unsubscribe poll"), 500);
+      this.setState(prevState => {
+        return {
+          intervalEnabled: true
+        }
+      });
       //Connection is open
       socket.onmessage = evt => {
         //console.log("RESPONSE: " + evt.data);
-        console.log('event:', evt.data)
+        console.log('event:', evt.data);
         //switch(evt.data) {
           //If evt.data returns error
 
@@ -110,9 +116,9 @@ class App extends Component {
               };
             });
           } else if (evt.data.includes('news:')) {
-            const str = evt.data
+            const str = evt.data;
             const newsObj = JSON.parse(str.substr(str.indexOf(':') + 1));
-            const rand = Math.floor(Math.random() * newsObj.num_results)
+            const rand = Math.floor(Math.random() * newsObj.num_results);
           
             /*
               Uncomment below to set feed state. May possible need to format data to feed object. 
@@ -132,7 +138,7 @@ class App extends Component {
               };
             });
           } else if (evt.data.includes('weather:')) {
-            const str = evt.data
+            const str = evt.data;
             // Message<test.channel: every 20 seconds>
             const weatherObj = JSON.parse(str.substr(str.indexOf(':') + 1));
             this.setState(prevState => {
