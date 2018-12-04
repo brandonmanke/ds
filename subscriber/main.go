@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -16,6 +17,21 @@ const port = ":8080"
 var addr = flag.String("addr", port, "http service address")
 var upgrader = websocket.Upgrader{}
 
+// WebSocket wrapper around gorilla websocket library
+type WebSocket struct {
+	socket      *websocket.Conn
+	subscribers map[string]*Subscriber
+	sync.Mutex
+}
+
+// CreateWS Creates WebSocket type
+func CreateWS(socket *websocket.Conn, subs map[string]*Subscriber) *WebSocket {
+	return &WebSocket{
+		socket:      socket,
+		subscribers: subs,
+	}
+}
+
 func testSub() {
 	fmt.Println("Subscriber Test!")
 	sub, err := CreateSubscriber("test.channel")
@@ -23,6 +39,7 @@ func testSub() {
 		log.Println(err)
 		panic(err)
 	}
+	defer sub.CloseChan()
 
 	ch := sub.GetChannel()
 	// print all messages delivered to channel (blocking)
@@ -31,49 +48,76 @@ func testSub() {
 	}
 }
 
-func subscribe(channelName string, mt int, socket *websocket.Conn) {
-	fmt.Printf("Subscribing to %s.\n", channelName)
-	socket.WriteMessage(mt, []byte(channelName))
+func createSubMap(channels ...string) map[string]*Subscriber {
+	m := make(map[string]*Subscriber)
+	for _, ch := range channels {
+		sub, err := CreateSubscriber(ch)
+		if err != nil {
+			log.Println(err)
+			panic(err)
+		}
+		m[ch] = sub
+	}
+	return m
+}
 
-	sub, err := CreateSubscriber(channelName)
-	if err != nil {
-		log.Println(err)
-		panic(err)
+func (ws *WebSocket) subscribe(channelName string, mt int) error {
+	ws.Lock()
+	defer ws.Unlock()
+	fmt.Printf("Subscribing to %s.\n", channelName)
+	ws.socket.WriteMessage(mt, []byte("Subbing: "+channelName))
+	if ws.subscribers[channelName].subbed == false {
+		ws.subscribers[channelName].subbed = true
 	}
 
-	ch := sub.GetChannel()
+	err := ws.subscribers[channelName].pubsub.Subscribe(channelName)
+	if err != nil {
+		ws.subscribers[channelName].subbed = false
+		fmt.Println("subscribe error:", err)
+		return err
+	}
+
+	//ch := ws.subscribers[channelName].ch
 	// print all messages delivered to channel (blocking)
-	for msg := range ch {
+	/*select {
+	case msg := <-ch:
+		// as soon as we receive a message we decrement our wg counter
+		// so this function stops blocking and returns
 		var sb strings.Builder
 		sb.WriteString(msg.Channel)
 		sb.WriteString(": ")
 		sb.WriteString(msg.Payload)
-		socket.WriteMessage(mt, []byte(sb.String()))
 		fmt.Println("Emiting message:", msg.Channel, msg.Payload)
-	}
-}
-
-func unsubscribe(channelName string, mt int, socket *websocket.Conn) error {
-	fmt.Printf("Unsubscribing to %s.\n", channelName)
-	socket.WriteMessage(mt, []byte("Unsubbing: "+channelName))
-
-	redis, err := GetRedis()
-	if err != nil {
-		log.Println(err)
-		panic(err)
-	}
-	// unsure is this actually does much
-	// we need to somehow get a reference
-	// to the redis instance and unsub
-	err = redis.Subscribe(channelName).Unsubscribe(channelName)
-	if err != nil {
-		socket.WriteMessage(1, []byte(err.Error()))
-		return err
-	}
+		err := ws.socket.WriteMessage(mt, []byte(sb.String()))
+		if err != nil {
+			ws.subscribers[channelName].subbed = false
+			fmt.Println("error writing message:", err)
+			break
+		}
+		if ws.subscribers[channelName].subbed == false {
+			break
+		}
+	default:
+		break
+	}*/
 	return nil
 }
 
-func listenForMessages(socket *websocket.Conn) {
+func (ws *WebSocket) unsubscribe(channelName string, mt int) error {
+	ws.Lock()
+	defer ws.Unlock()
+	fmt.Printf("Unsubscribing to %s.\n", channelName)
+	ws.socket.WriteMessage(mt, []byte("Unsubbing: "+channelName))
+	err := ws.subscribers[channelName].pubsub.Unsubscribe(channelName)
+	if err != nil {
+		return err
+	}
+	ws.subscribers[channelName].CloseChan()
+	ws.subscribers[channelName].subbed = false
+	return nil
+}
+
+func (ws *WebSocket) listenForMessages() {
 	// parse messages for subscribe:  channel
 	// parse messages for unsubscribe: channel
 	// subscribe and emit accordingly,
@@ -86,22 +130,45 @@ func listenForMessages(socket *websocket.Conn) {
 		//PingMessage = 9
 		//PongMessage = 10
 
-		mt, err := parseMessage(socket)
-		if mt == 8 {
-			log.Println("Close message received. Closing Socket.")
+		mt, err := ws.parseMessage() //ws.socket
+		fmt.Println(mt, err)
+		//if mt == 8 {
+		//	log.Println("Close message received. Closing Socket.")
+		//	break
+		//}
+		if err != nil {
+			ws.Lock()
+			log.Println("Parse message error:", err)
+			ws.socket.WriteMessage(mt, []byte(err.Error()))
+			ws.Unlock()
 			break
 		}
-		if err != nil {
-			log.Println("Parse message error:", err)
-			socket.WriteMessage(mt, []byte(err.Error()))
+
+		select {
+		case testmsg := <-ws.subscribers["test.channel"].GetChannel():
+			ws.Lock()
+			fmt.Println("Sending test.message")
+			ws.socket.WriteMessage(mt, []byte(testmsg.String()))
+			ws.Unlock()
+		case weathermsg := <-ws.subscribers["weather"].GetChannel():
+			ws.Lock()
+			fmt.Println("Sending weather msg")
+			ws.socket.WriteMessage(mt, []byte(weathermsg.String()))
+			ws.Unlock()
+		case newsmsg := <-ws.subscribers["news"].GetChannel():
+			ws.Lock()
+			fmt.Println("Sending news msg")
+			ws.socket.WriteMessage(mt, []byte(newsmsg.String()))
+			ws.Unlock()
+		default:
 			break
 		}
 	}
 }
 
 // Temp not sure if needed
-func parseMessage(socket *websocket.Conn) (int, error) {
-	mt, message, err := socket.ReadMessage()
+func (ws *WebSocket) parseMessage() (int, error) {
+	mt, message, err := ws.socket.ReadMessage()
 	if err != nil {
 		log.Println("read error:", err)
 		return mt, err
@@ -113,9 +180,9 @@ func parseMessage(socket *websocket.Conn) (int, error) {
 	}
 	switch arr[0] {
 	case "subscribe":
-		subscribe(arr[1], mt, socket)
+		go ws.subscribe(arr[1], mt)
 	case "unsubscribe":
-		unsubscribe(arr[1], mt, socket)
+		go ws.unsubscribe(arr[1], mt)
 	default:
 		var sb strings.Builder
 		sb.WriteString("Unable to understand message: ")
@@ -131,20 +198,21 @@ func handleSocketConn(wr http.ResponseWriter, req *http.Request) {
 		return true
 	}
 	socket, err := upgrader.Upgrade(wr, req, nil)
+	m := createSubMap("test.channel", "weather", "news")
+	ws := CreateWS(socket, m)
 	if err != nil {
 		log.Println(err)
 	}
 	defer socket.Close()
 
-	listenForMessages(socket)
+	ws.listenForMessages()
 }
 
 func main() {
-	go testSub()
+	//go testSub()
 
 	log.SetFlags(0)
 	log.Println("Serving at localhost:8080...")
 	http.HandleFunc("/ws", handleSocketConn)
 	log.Fatal(http.ListenAndServe(*addr, nil))
-
 }

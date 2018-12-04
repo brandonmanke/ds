@@ -15,6 +15,7 @@ type Subscriber struct {
 	pubsub   *redis.PubSub
 	chanName string
 	ch       <-chan *redis.Message
+	subbed   bool
 }
 
 // Lookup environment variable HOST for hostname parameter
@@ -73,6 +74,7 @@ func CreateSubscriber(chanName string) (*Subscriber, error) {
 		pubsub:   pubsub,
 		chanName: chanName,
 		ch:       ch,
+		subbed:   true,
 	}
 	return &sub, nil
 }
@@ -80,4 +82,9 @@ func CreateSubscriber(chanName string) (*Subscriber, error) {
 // GetChannel returns channel type that current subscriber is using
 func (s *Subscriber) GetChannel() <-chan *redis.Message {
 	return s.ch
+}
+
+// CloseChan close pubsub chan
+func (s *Subscriber) CloseChan() {
+	s.pubsub.Close()
 }
