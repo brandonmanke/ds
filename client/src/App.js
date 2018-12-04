@@ -6,6 +6,18 @@ import { Table, Grid, Row, Col, PageHeader } from "react-bootstrap";
 import Feed from "./components/Feed";
 import Subscriptions from "./components/Subscriptions";
 
+import * as newsResponse from './news_response.json';
+// import * as weatherResponse from "./weather_response.json";
+
+console.log(newsResponse.results[0].abstract)
+
+const newsFeed = newsResponse.results.map( result => ({
+  title: result.abstract,
+  time: new Date().toLocaleTimeString()
+}))
+
+console.log(newsFeed);
+
 //Establishing socket instance
 const socket = new WebSocket("ws://localhost:8080/ws");
 
@@ -17,103 +29,64 @@ socket.onerror = evt => {
   console.log("ERROR: " + evt.data);
 };
 
-//Variables for dummy feed data
-var date = new Date();
-var time = date.getTime();
-
-var hour = 60 * 60 * 1000;
-
-const times = [
-  time,
-  time + 3 * hour,
-  time + 6 * hour,
-  time + 1 * hour,
-  time + 4 * hour,
-  time + 7 * hour,
-  time + 2 * hour,
-  time + 5 * hour
-];
+// let counter = 0;
 
 class App extends Component {
-  state = {
-    // Dummy feed data. Will switch to null once ready to handle socket messages
-    feed: [
-      {
-        type: "weather",
-        title: "Weather1",
-        time: times[0]
-      },
-      {
-        type: "weather",
-        title: "Weather2",
-        time: times[1]
-      },
-      {
-        type: "weather",
-        title: "Weather3",
-        time: times[2]
-      },
-      {
-        type: "news",
-        title: "News1",
-        time: times[3]
-      },
-      {
-        type: "news",
-        title: "News2",
-        time: times[4]
-      },
-      {
-        type: "news",
-        title: "News3",
-        time: times[5]
-      },
-      {
-        type: "friends",
-        title: "Friend1",
-        time: times[6]
-      },
-      {
-        type: "friends",
-        title: "Friend2",
-        time: times[7]
-      }
-    ],
-    // Array of state objects that change based on subscriptions
-    subscriptions: [
-      {
-        title: "test.channel",
-        subscribed: true
-      },
-      {
-        title: "weather",
-        subscribed: false
-      },
-      {
-        title: "news",
-        subscribed: false
-      }
-    ]
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      // Dummy feed data. Will switch to null once ready to handle socket messages
+  
+      // feed: newsFeed,
+  
+      feed: '',
+  
+      // Array of state objects that change based on subscriptions
+      subscriptions: [
+        {
+          title: "test.channel",
+          subscribed: true
+        },
+        {
+          title: "weather",
+          subscribed: false
+        },
+        {
+          title: "news",
+          subscribed: false
+        }
+      ]
+    };
+    this.handleSubscription = this.handleSubscription.bind(this)
+    this.handleUnsubscription = this.handleUnsubscription.bind(this)
 
+  }
+  
   // Might need to use this. Placeholder for now
   componentDidMount() {}
 
   //Handles button controls to subscribe to channel
   handleSubscription = button => {
-    console.log("frontend subscribed")
-    socket.send("subscribe test.channel");
+    console.log(this.state.subscriptions[button].title, " subscribed")
+    socket.send("subscribe " + this.state.subscriptions[button].title );
     this.setState(prevState => {
       return {
-        prevState: (prevState.subscriptions[button].subscribed = true)
+        // feed: [
+        //   ...prevState.feed,
+        //   {
+        //     title: newsFeed[counter++].title,
+        //     time: new Date().toLocaleTimeString()
+        //   }
+        // ],
+        subscribed: (prevState.subscriptions[button].subscribed = true)
       };
     });
   };
 
   //Handles button for unsubscribe
   handleUnsubscription = button => {
-    console.log("frontend unsubscribed")
-    socket.send("unsubscribe test.channel");
+    console.log(this.state.subscriptions[button].title, " unsubscribed")
+    socket.send("unsubscribe " + this.state.subscriptions[button].title );
     this.setState(prevState => {
       return {
         subscribed: (prevState.subscriptions[button].subscribed = false)
@@ -132,19 +105,64 @@ class App extends Component {
           case (evt.data.search("error") !== -1 ):
           console.log("evt.data returns error");
           break;
-          //If evt.data returns data
-          default:
+
+          //if evt.data returns string
+          case(evt.data.search("test") !== -1):
+          this.setState(prevState => {
+              return {
+                // TODO: How to handle evt.data?
+                feed: [
+                  ...prevState.feed,
+                  {
+                    title: evt.data,
+                    time: new Date().toLocaleTimeString()
+                  }
+                ]
+              };
+            });
+          break;
+
+          //If evt.data returns news json
+          case(evt.data.search("news")):
+          const newsObj = JSON.parse(evt.data);
+          
           /*
             Uncomment below to set feed state. May possible need to format data to feed object. 
             Look above to object state.feed for current reference
           */
 
-          // this.setState(prevState => {
-          //   return {
-          //     //TODO: How to handle evt.data?
-          //     // subscribed: (prevState.feed = evt.data)
-          //   };
-          // });
+          this.setState(prevState => {
+            return {
+              //Tcase(evt.data.search("news")):ODO: How to handle evt.data?
+              feed: [
+                ...prevState.feed,
+                {
+                  title: newsObj.result.abstract,
+                  time: new Date().toLocaleTimeString()
+                }
+              ]
+            };
+          });
+          break;
+
+          //if evt.data returns weather json
+          case(evt.data.search("weather")):
+          const weatherObj = JSON.parse(evt.data);
+          this.setState(prevState => {
+            return {
+              feed: [
+                ...prevState.feed,
+                {
+                  title: weatherObj.result.abstract,
+                  time: new Date().toLocaleTimeString()
+                }
+              ]
+            };
+          });
+          break;
+
+          default:
+          console.log("nothing in response");
           break;
         }
         

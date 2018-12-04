@@ -9,24 +9,24 @@ class FeedItem extends React.Component {
             time,
         } = this.props
 
-        var date = new Date(time)
-        var hour = date.getHours();
-        var minutes = date.getMinutes();
-        var ampm = "AM";
+        // var date = new Date(time)
+        // var hour = date.getHours();
+        // var minutes = date.getMinutes();
+        // var ampm = "AM";
 
-        if(hour > 12) {
-            hour = hour - 12;
-            ampm = "PM";
-        } else if(hour === 0) {
-            hour = 12;
-        }
+        // if(hour > 12) {
+        //     hour = hour - 12;
+        //     ampm = "PM";
+        // } else if(hour === 0) {
+        //     hour = 12;
+        // }
 
-        const realTime = hour + ":" + minutes + ampm;
+        // const realTime = hour + ":" + minutes + ampm;
 
         return(
             <tr>
                 <td>{title}</td>
-                <td>{realTime}</td>
+                <td>{time}</td>
             </tr>
         )
     }
