@@ -6,18 +6,6 @@ import { Table, Grid, Row, Col, PageHeader } from "react-bootstrap";
 import Feed from "./components/Feed";
 import Subscriptions from "./components/Subscriptions";
 
-import * as newsResponse from './news_response.json';
-// import * as weatherResponse from "./weather_response.json";
-
-console.log(newsResponse.results[0].abstract)
-
-const newsFeed = newsResponse.results.map( result => ({
-  title: result.abstract,
-  time: new Date().toLocaleTimeString()
-}))
-
-console.log(newsFeed);
-
 //Establishing socket instance
 const socket = new WebSocket("ws://localhost:8080/ws");
 
@@ -99,16 +87,15 @@ class App extends Component {
     if (socket.readyState === 1) {
       //Connection is open
       socket.onmessage = evt => {
-        console.log("RESPONSE: " + evt.data);
-        switch(evt) {
+        //console.log("RESPONSE: " + evt.data);
+        console.log('event:', evt.data)
+        //switch(evt.data) {
           //If evt.data returns error
-          case (evt.data.search("error") !== -1 ):
-          console.log("evt.data returns error");
-          break;
 
-          //if evt.data returns string
-          case(evt.data.search("test") !== -1):
-          this.setState(prevState => {
+          if (evt.data.includes('error:')) {
+            console.log("evt.data returns error");
+          } else if (evt.data.includes('<test.channel')) {
+            this.setState(prevState => {
               return {
                 // TODO: How to handle evt.data?
                 feed: [
@@ -120,51 +107,47 @@ class App extends Component {
                 ]
               };
             });
-          break;
-
-          //If evt.data returns news json
-          case(evt.data.search("news")):
-          const newsObj = JSON.parse(evt.data);
+          } else if (evt.data.includes('news:')) {
+            const str = evt.data
+            const newsObj = JSON.parse(str.substr(str.indexOf(':') + 1));
+            const rand = Math.floor(Math.random() * newsObj.num_results)
           
-          /*
-            Uncomment below to set feed state. May possible need to format data to feed object. 
-            Look above to object state.feed for current reference
-          */
+            /*
+              Uncomment below to set feed state. May possible need to format data to feed object. 
+              Look above to object state.feed for current reference
+            */
 
-          this.setState(prevState => {
-            return {
-              //Tcase(evt.data.search("news")):ODO: How to handle evt.data?
-              feed: [
-                ...prevState.feed,
-                {
-                  title: newsObj.result.abstract,
-                  time: new Date().toLocaleTimeString()
-                }
-              ]
-            };
-          });
-          break;
-
-          //if evt.data returns weather json
-          case(evt.data.search("weather")):
-          const weatherObj = JSON.parse(evt.data);
-          this.setState(prevState => {
-            return {
-              feed: [
-                ...prevState.feed,
-                {
-                  title: weatherObj.result.abstract,
-                  time: new Date().toLocaleTimeString()
-                }
-              ]
-            };
-          });
-          break;
-
-          default:
-          console.log("nothing in response");
-          break;
-        }
+            this.setState(prevState => {
+              return {
+                //Tcase(evt.data.search("news")):ODO: How to handle evt.data?
+                feed: [
+                  ...prevState.feed,
+                  {
+                    title: newsObj.results[rand].abstract,
+                    time: new Date().toLocaleTimeString()
+                  }
+                ]
+              };
+            });
+          } else if (evt.data.includes('weather:')) {
+            const str = evt.data
+            // Message<test.channel: every 20 seconds>
+            const weatherObj = JSON.parse(str.substr(str.indexOf(':') + 1));
+            this.setState(prevState => {
+              return {
+                feed: [
+                  ...prevState.feed,
+                  {
+                    title: `Temperature: ${weatherObj.currently.apparentTemperature}`,
+                    time: new Date().toLocaleTimeString()
+                  }
+                ]
+              };
+            });
+          } else {
+            console.log("nothing in response");
+          }
+        //}
         
       };
     } 
