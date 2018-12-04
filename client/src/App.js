@@ -94,16 +94,16 @@ class App extends Component {
 
           if (evt.data.includes('error:')) {
             console.log("evt.data returns error");
-          } else if (evt.data.includes('<test.channel')) {
+          } else if (evt.data.includes('test.channel:')) {
             this.setState(prevState => {
               return {
                 // TODO: How to handle evt.data?
                 feed: [
-                  ...prevState.feed,
                   {
                     title: evt.data,
                     time: new Date().toLocaleTimeString()
-                  }
+                  },
+                  ...prevState.feed
                 ]
               };
             });
@@ -121,11 +121,11 @@ class App extends Component {
               return {
                 //Tcase(evt.data.search("news")):ODO: How to handle evt.data?
                 feed: [
-                  ...prevState.feed,
                   {
-                    title: newsObj.results[rand].abstract,
+                    title: `Title: ${newsObj.results[rand].title}\n Summary: ${newsObj.results[rand].abstract}`,
                     time: new Date().toLocaleTimeString()
-                  }
+                  },
+                  ...prevState.feed
                 ]
               };
             });
@@ -136,11 +136,14 @@ class App extends Component {
             this.setState(prevState => {
               return {
                 feed: [
-                  ...prevState.feed,
                   {
-                    title: `Temperature: ${weatherObj.currently.apparentTemperature}`,
+                    title: `Temperature: ${weatherObj.currently.apparentTemperature}. 
+                            Summary: ${weatherObj.currently.summary}. 
+                            Lat: ${weatherObj.latitude}, Long: ${weatherObj.longitude}.
+                            Timezone: ${weatherObj.timezone}.`,
                     time: new Date().toLocaleTimeString()
-                  }
+                  },
+                  ...prevState.feed
                 ]
               };
             });

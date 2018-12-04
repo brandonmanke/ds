@@ -138,24 +138,24 @@ func main() {
 	}()
 
 	go func() {
-		setInterval(20*time.Second, func() {
-			fmt.Println("publishing to test.channel - every 20 seconds")
-			publishTest("test.channel", "every 20 seconds")
+		setInterval(15*time.Second, func() {
+			fmt.Println("publishing to test.channel - every 15 seconds")
+			publishTest("test.channel", "every 15 seconds")
 		})
 		wg.Done()
 	}()
 
 	go func() {
-		setInterval(30*time.Second, func() {
-			fmt.Println("publishing to weather channel - every 30 seconds")
+		setInterval(25*time.Second, func() {
+			fmt.Println("publishing to weather channel - every 25 seconds")
 			publishWeather("weather", config)
 		})
 		wg.Done()
 	}()
 
 	go func() {
-		setInterval(40*time.Second, func() {
-			fmt.Println("publishing to news channel - every 40 seconds")
+		setInterval(30*time.Second, func() {
+			fmt.Println("publishing to news channel - every 30 seconds")
 			publishNews("news", config)
 		})
 		//wg.Done()
