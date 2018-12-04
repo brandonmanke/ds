@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -112,7 +113,6 @@ func (ws *WebSocket) unsubscribe(channelName string, mt int) error {
 	if err != nil {
 		return err
 	}
-	ws.subscribers[channelName].CloseChan()
 	ws.subscribers[channelName].subbed = false
 	return nil
 }
@@ -153,14 +153,15 @@ func (ws *WebSocket) listenForMessages() {
 		case weathermsg := <-ws.subscribers["weather"].GetChannel():
 			ws.Lock()
 			fmt.Println("Sending weather msg")
-			ws.socket.WriteMessage(mt, []byte(weathermsg.String()))
+			ws.socket.WriteMessage(mt, []byte(weathermsg.Channel+": "+weathermsg.Payload))
 			ws.Unlock()
 		case newsmsg := <-ws.subscribers["news"].GetChannel():
 			ws.Lock()
 			fmt.Println("Sending news msg")
-			ws.socket.WriteMessage(mt, []byte(newsmsg.String()))
+			ws.socket.WriteMessage(mt, []byte(newsmsg.Channel+": "+newsmsg.Payload))
 			ws.Unlock()
 		default:
+			time.Sleep(1 * time.Millisecond)
 			break
 		}
 	}
