@@ -22,12 +22,10 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -62,35 +60,6 @@ func readConfig(filePath string) (map[string]string, error) {
 func setInterval(d time.Duration, f func()) {
 	for range time.Tick(d) {
 		f()
-	}
-}
-
-func parseInput(config map[string]string) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Enter your command: ")
-	for text, err := reader.ReadString('\n'); err != nil || text != "quit"; {
-		trimmed := strings.Trim(text, " \n")
-		tokens := strings.Split(trimmed, " ")
-		if len(tokens) != 2 || len(tokens) != 3 || tokens[0] != "pub" {
-			//fmt.Println("Please enter a correct command")
-			//fmt.Println("pub channelName [message/category]")
-			continue
-		}
-		switch tokens[1] {
-		case "weather":
-			publishWeather(tokens[1], config)
-		case "news":
-			publishNews(tokens[1], config)
-		case "test.channel":
-			var sb strings.Builder
-			for i := 2; i < len(tokens); i++ {
-				sb.WriteString(tokens[i])
-			}
-			publishTest(tokens[1], sb.String())
-		default:
-			fmt.Println("Unrecognized input. Please try again.")
-			break
-		}
 	}
 }
 
@@ -132,6 +101,7 @@ func publishTest(channel, msg string) error {
 	if err != nil {
 		return err
 	}
+	defer pub.Close()
 	pub.PublishMessage(msg)
 	return nil
 }
@@ -155,7 +125,7 @@ func main() {
 	//ch := make
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(5)
 
 	go func() {
 		testMessages(pub)
@@ -167,11 +137,29 @@ func main() {
 		wg.Done()
 	}()
 
-	setInterval(60*time.Second, func() {
-		publishTest("test.channel", "every 60 seconds")
-	})
+	go func() {
+		setInterval(15*time.Second, func() {
+			fmt.Println("publishing to test.channel - every 15 seconds")
+			publishTest("test.channel", "every 15 seconds")
+		})
+		wg.Done()
+	}()
+
+	go func() {
+		setInterval(25*time.Second, func() {
+			fmt.Println("publishing to weather channel - every 25 seconds")
+			publishWeather("weather", config)
+		})
+		wg.Done()
+	}()
+
+	go func() {
+		setInterval(30*time.Second, func() {
+			fmt.Println("publishing to news channel - every 30 seconds")
+			publishNews("news", config)
+		})
+		//wg.Done()
+	}()
 
 	wg.Wait()
-
-	parseInput(config)
 }
