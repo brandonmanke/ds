@@ -33,6 +33,8 @@ func testSub() {
 
 func subscribe(channelName string, mt int, socket *websocket.Conn) {
 	fmt.Printf("Subscribing to %s.\n", channelName)
+	socket.WriteMessage(mt, []byte(channelName))
+
 	sub, err := CreateSubscriber(channelName)
 	if err != nil {
 		log.Println(err)
@@ -51,8 +53,10 @@ func subscribe(channelName string, mt int, socket *websocket.Conn) {
 	}
 }
 
-func unsubscribe(channelName string, socket *websocket.Conn) error {
+func unsubscribe(channelName string, mt int, socket *websocket.Conn) error {
 	fmt.Printf("Unsubscribing to %s.\n", channelName)
+	socket.WriteMessage(mt, []byte("Unsubbing: "+channelName))
+
 	redis, err := GetRedis()
 	if err != nil {
 		log.Println(err)
@@ -109,9 +113,9 @@ func parseMessage(socket *websocket.Conn) (int, error) {
 	}
 	switch arr[0] {
 	case "subscribe":
-		go subscribe(arr[1], mt, socket)
+		subscribe(arr[1], mt, socket)
 	case "unsubscribe":
-		go unsubscribe(arr[1], socket)
+		unsubscribe(arr[1], mt, socket)
 	default:
 		var sb strings.Builder
 		sb.WriteString("Unable to understand message: ")
@@ -132,21 +136,7 @@ func handleSocketConn(wr http.ResponseWriter, req *http.Request) {
 	}
 	defer socket.Close()
 
-	go listenForMessages(socket)
-
-	for {
-		mt, message, err := socket.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = socket.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-	}
+	listenForMessages(socket)
 }
 
 func main() {
@@ -156,4 +146,5 @@ func main() {
 	log.Println("Serving at localhost:8080...")
 	http.HandleFunc("/ws", handleSocketConn)
 	log.Fatal(http.ListenAndServe(*addr, nil))
+
 }
