@@ -85,6 +85,7 @@ class App extends Component {
   render() {
     //Checks for open connection
     if (socket.readyState === 1) {
+      setTimeout(() => socket.send("unsubscribe poll"), 500)
       //Connection is open
       socket.onmessage = evt => {
         //console.log("RESPONSE: " + evt.data);

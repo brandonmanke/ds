@@ -105,6 +105,9 @@ func (ws *WebSocket) subscribe(channelName string, mt int) error {
 }
 
 func (ws *WebSocket) unsubscribe(channelName string, mt int) error {
+	if channelName == "poll" {
+		return nil
+	}
 	ws.Lock()
 	defer ws.Unlock()
 	fmt.Printf("Unsubscribing to %s.\n", channelName)
@@ -131,7 +134,7 @@ func (ws *WebSocket) listenForMessages() {
 		//PongMessage = 10
 
 		mt, err := ws.parseMessage() //ws.socket
-		fmt.Println(mt, err)
+		//fmt.Println(mt, err)
 		//if mt == 8 {
 		//	log.Println("Close message received. Closing Socket.")
 		//	break
@@ -199,7 +202,7 @@ func handleSocketConn(wr http.ResponseWriter, req *http.Request) {
 		return true
 	}
 	socket, err := upgrader.Upgrade(wr, req, nil)
-	m := createSubMap("test.channel", "weather", "news")
+	m := createSubMap("test.channel", "weather", "news", "poll")
 	ws := CreateWS(socket, m)
 	if err != nil {
 		log.Println(err)
