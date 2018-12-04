@@ -78,29 +78,6 @@ func (ws *WebSocket) subscribe(channelName string, mt int) error {
 		return err
 	}
 
-	//ch := ws.subscribers[channelName].ch
-	// print all messages delivered to channel (blocking)
-	/*select {
-	case msg := <-ch:
-		// as soon as we receive a message we decrement our wg counter
-		// so this function stops blocking and returns
-		var sb strings.Builder
-		sb.WriteString(msg.Channel)
-		sb.WriteString(": ")
-		sb.WriteString(msg.Payload)
-		fmt.Println("Emiting message:", msg.Channel, msg.Payload)
-		err := ws.socket.WriteMessage(mt, []byte(sb.String()))
-		if err != nil {
-			ws.subscribers[channelName].subbed = false
-			fmt.Println("error writing message:", err)
-			break
-		}
-		if ws.subscribers[channelName].subbed == false {
-			break
-		}
-	default:
-		break
-	}*/
 	return nil
 }
 
@@ -133,12 +110,8 @@ func (ws *WebSocket) listenForMessages() {
 		//PingMessage = 9
 		//PongMessage = 10
 
-		mt, err := ws.parseMessage() //ws.socket
-		//fmt.Println(mt, err)
-		//if mt == 8 {
-		//	log.Println("Close message received. Closing Socket.")
-		//	break
-		//}
+		mt, err := ws.parseMessage() // blocking
+
 		if err != nil {
 			ws.Lock()
 			log.Println("Parse message error:", err)
@@ -170,7 +143,6 @@ func (ws *WebSocket) listenForMessages() {
 	}
 }
 
-// Temp not sure if needed
 func (ws *WebSocket) parseMessage() (int, error) {
 	mt, message, err := ws.socket.ReadMessage()
 	if err != nil {
@@ -214,7 +186,6 @@ func handleSocketConn(wr http.ResponseWriter, req *http.Request) {
 
 func main() {
 	//go testSub()
-
 	log.SetFlags(0)
 	log.Println("Serving at localhost:8080...")
 	http.HandleFunc("/ws", handleSocketConn)

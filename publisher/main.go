@@ -119,9 +119,7 @@ func main() {
 	}
 
 	// TODO remove wait groups and use channels instead
-	// to know when threads finish publishing
-	// We need to refactor this anyways since we are going
-	// to be polling a bunch of different APIs
+	// easier to know when threads finish publishing
 	//ch := make
 
 	var wg sync.WaitGroup
