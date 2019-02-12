@@ -65,6 +65,9 @@ func setInterval(d time.Duration, f func()) {
 
 func publishWeather(channel string, config map[string]string) error {
 	pub, err := CreatePublisher(channel)
+	if err != nil {
+		return err
+	}
 	weatherAPI := CreateWeatherAPI(config["weather-api-key"])
 	res, err := weatherAPI.GetForecast()
 	if err != nil {
@@ -81,6 +84,9 @@ func publishWeather(channel string, config map[string]string) error {
 
 func publishNews(channel string, config map[string]string) error {
 	pub, err := CreatePublisher(channel)
+	if err != nil {
+		return err
+	}
 	newsAPI := CreateNYTimesAPI(config["news-api-key"])
 	res, err := newsAPI.GetHome()
 	if err != nil {
